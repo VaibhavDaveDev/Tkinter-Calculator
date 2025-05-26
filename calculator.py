@@ -10,6 +10,7 @@ class Calculator:
         self.expression = ""
         self.result_var = tk.StringVar()
         self.result_var.set("0")
+        self.memory = 0.0
         self.create_widgets()
 
     def create_widgets(self):
@@ -25,6 +26,7 @@ class Calculator:
 
         # Button Layout
         buttons = [
+            ("MC", 0, 0), ("MR", 0, 1), ("M-", 0, 2), ("M+", 0, 3),
             ("C", 1, 0), ("/", 1, 3),
             ("7", 2, 0), ("8", 2, 1), ("9", 2, 2), ("*", 2, 3),
             ("4", 3, 0), ("5", 3, 1), ("6", 3, 2), ("-", 3, 3),
@@ -45,6 +47,44 @@ class Calculator:
             self.clear()
         elif text == "Del":
             self.delete()
+        elif text == "MC":
+            self.memory = 0.0
+        elif text == "MR":
+            self.expression = str(self.memory)
+            self.result_var.set(self.expression)
+        elif text == "M+" or text == "M-":
+            current_value_str = ""
+            value_to_operate = None
+
+            if self.expression: # Prioritize active expression
+                current_value_str = self.expression
+            else: # Otherwise, use the displayed value (e.g., result of a calculation)
+                current_value_str = self.result_var.get()
+            
+            try:
+                # If there's an active expression (e.g., "2+3"), eval it.
+                # Otherwise, the value in result_var (e.g. "5" from a previous calc) should be a direct float.
+                if self.expression: 
+                    value_to_operate = eval(current_value_str)
+                else:
+                    value_to_operate = float(current_value_str)
+
+                if text == "M+":
+                    self.memory += value_to_operate
+                elif text == "M-":
+                    self.memory -= value_to_operate
+                
+                # Display the value that was actually added/subtracted to/from memory
+                self.result_var.set(str(value_to_operate)) 
+                self.expression = "" # Clear current expression after memory operation
+
+            except (SyntaxError, NameError, TypeError, ValueError, ZeroDivisionError):
+                # These errors can occur from eval() or float()
+                self.result_var.set("Error")
+                self.expression = ""
+            except Exception: # Catch-all for any other unexpected errors
+                self.result_var.set("Error")
+                self.expression = ""
         else:
             self.expression += text
             self.result_var.set(self.expression)
